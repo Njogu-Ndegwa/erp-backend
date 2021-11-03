@@ -14,7 +14,7 @@ from rest_framework.decorators import api_view, permission_classes
 
 
 from .auth import generate_access_token, generate_refresh_token
-from .serializers import UserSerializer, UserLoginSerializer
+from .serializers import UserSerializer, UserLoginSerializer, ChangePasswordSerializer
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from .models import User
 from datetime import datetime, timezone, timedelta
@@ -81,3 +81,27 @@ def user_login_view(request):
         return response
     except AttributeError:
         raise exceptions.AuthenticationFailed("No user exists with such email")
+
+
+@api_view(['PUT'])
+def change_password_first_login(request, pk):
+    """Force the user to change the password on initial login"""
+    serializer = ChangePasswordSerializer(data=request.data)
+    if serializer.is_valid():
+        user = User.objects.get(id=pk)
+        if not user.check_password(serializer.validated_data['password']):
+            return Response({'password':
+                            ['Wrong password. Please try again.']},
+                            status=status.HTTP_400_BAD_REQUEST)
+        elif user.isPassChanged:
+            return Response({'password':
+                            ['This password has Already been changed. Request password reset link instead.']},
+                            status=status.HTTP_400_BAD_REQUEST)
+        user.set_password(serializer.validated_data['new_password'])
+        user.isPassChanged = True
+        user.is_active = True
+        user.save()
+        return Response({'status': 'Password Changed Succesfully.'},
+                        status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

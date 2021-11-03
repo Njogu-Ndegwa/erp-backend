@@ -116,5 +116,28 @@ def create_password(sender, instance, created, **kwargs):
 
 post_save.connect(create_password, sender=User)
 
+class Role(models.Model):
+    '''
+  The Role entries are managed by the system,
+  automatically created via a Django data migration.
+  '''
+    ADMIN = 1
+    MANAGER = 2
+    SUPERMANAGER = 3
+    INVENTORYCLERK = 4
+    SUPERADMIN = 5
+    TECHNICIAN = 6
+    ROLE_CHOICES = (
+        (ADMIN, 'Admin'),
+        (MANAGER, 'Manager'),
+        (SUPERMANAGER, 'Super Manager'),
+        (INVENTORYCLERK, 'Inventory Clerk'),
+        (SUPERADMIN, ' Super admin'),
+        (TECHNICIAN, 'Technician'),
+    )
+
+    id = models.PositiveSmallIntegerField(choices=ROLE_CHOICES, primary_key=True)
+    
+
 
 
