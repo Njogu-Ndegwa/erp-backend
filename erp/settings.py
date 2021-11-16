@@ -52,6 +52,18 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'users',
+    'corsheaders',
+    'location',
+    'projects',
+    'maincategories',
+    'subcategories',
+    'toolbrand',
+    'toolstates',
+    'vendors',
+    'warehouses',
+    'item',
+    'customer',
+    'stock_in'
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -67,7 +79,9 @@ CORS_ALLOW_HEADERS = [
 
 REST_FRAMEWORK = {
 
-
+'DEFAULT_AUTHENTICATION_CLASSES': (
+        'users.verify.JWTAuthentication',
+    ),
 'DEFAULT_PERMISSION_CLASSES': [
    'rest_framework.permissions.AllowAny',
 ],
@@ -102,8 +116,15 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
+
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -143,7 +164,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'erpreplication',
         'USER': 'root',
-        'PASSWORD': 'Wanjiku0$',
+        'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '3306',
     }

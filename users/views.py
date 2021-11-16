@@ -11,6 +11,7 @@ from rest_framework import status, generics, permissions, exceptions
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
+from django.views.decorators.csrf import csrf_exempt
 
 
 from .auth import generate_access_token, generate_refresh_token
@@ -38,9 +39,8 @@ def create_new_account(request):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
-@ensure_csrf_cookie
 def user_login_view(request):
+    print("User Login View")
     """Get user's email address and password"""
     email = request.data.get('email')
     password = request.data.get('password')
@@ -105,3 +105,25 @@ def change_password_first_login(request, pk):
                         status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@csrf_protect
+def refresh_token_view(request):
+    """Generate refresh token"""
+    refresh_token = request.COOKIES.get('refreshtoken')
+    if refresh_token is None:
+        raise exceptions.AuthenticationFailed(
+            'Authentication credentials were not provided.')
+    try:
+        payload = jwt.decode(
+            refresh_token, settings.REFRESH_TOKEN_SECRET, algorithms=['HS256'])
+    except jwt.ExpiredSignatureError:
+        raise exceptions.AuthenticationFailed(
+            'expired refresh token, please login again.')
+
+    user = User.objects.filter(id=payload.get('user_id')).first()
+    if user is None:
+        raise exceptions.AuthenticationFailed('User not found')
+    access_token = generate_access_token(user)
+    return Response({'access_token': access_token})
